@@ -11,8 +11,9 @@
 ## 詳細ドキュメント（必要な時に読むこと）
 
 - `docs/SPEC.md` — 仕様書。タイマーのルール、システム構成、DB設計、開発フェーズの状態はここが正
-- `docs/ISSUES.md` — 開発タスク一覧（フェーズ1〜4）
 - `uta-timer-server/README.md` — サーバーのセットアップ手順・環境変数・トラブルシューティング
+
+開発タスク一覧は[GitHub Issues](https://github.com/toshishino/nobinyan/issues)で管理する（旧`docs/ISSUES.md`は移行済みのため削除）。Milestone 1〜4がフェーズに対応し、優先度未定のタスクは`backlog`ラベルを付与している。
 
 **コードを変更する前に、関連する仕様が`docs/SPEC.md`と食い違っていないか確認すること。** 変更後、仕様が変わった場合は`docs/SPEC.md`も一緒に更新する。
 
@@ -26,8 +27,7 @@ uta-timer-server/        … 中継サーバー(Node.js, ESM)
   ├─ settings.html         … Web設定画面
   └─ ranking.js            … 常連ランキングCLI
 docs/
-  ├─ SPEC.md
-  └─ ISSUES.md
+  └─ SPEC.md
 ```
 
 ## 現在の状態（詳細はdocs/SPEC.md参照）

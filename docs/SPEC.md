@@ -131,7 +131,7 @@ viewers (
 | 3 | YouTube初コメ判定のセッション化 | 実装済み |
 | 4 | 常連ランキング機能（Twitch/YouTube共通） | CLI版のみ実装、Web UI化は未着手 |
 
-詳細タスクは `ISSUES.md` を参照。
+詳細タスクは [GitHub Issues](https://github.com/toshishino/nobinyan/issues) を参照。
 
 ---
 

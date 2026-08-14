@@ -12,9 +12,8 @@ uta-timer-server/       … 中継サーバー(Twitch/YouTube監視、Web設定�
   ├─ settings.html      … Web設定画面
   ├─ ranking.js          … 常連ランキング表示CLI
   └─ README.md          … サーバーのセットアップ・使い方詳細
-docs/                   … 仕様書・タスク一覧
-  ├─ SPEC.md            … 仕様書(タイマールール・システム構成・DB設計など)
-  └─ ISSUES.md          … 開発タスク一覧(フェーズ1〜4)
+docs/                   … 仕様書
+  └─ SPEC.md            … 仕様書(タイマールール・システム構成・DB設計など)
 ```
 
 ## クイックスタート(GitHub Codespaces推奨)
@@ -37,7 +36,7 @@ docs/                   … 仕様書・タスク一覧
 ## ドキュメント
 
 - [仕様書 (docs/SPEC.md)](docs/SPEC.md) — タイマーのルール、システム構成、DB設計、開発フェーズ
-- [タスク一覧 (docs/ISSUES.md)](docs/ISSUES.md) — フェーズ1〜4の詳細タスク
+- [タスク一覧 (GitHub Issues)](https://github.com/toshishino/nobinyan/issues) — Milestone 1〜4で管理
 
 ## 現在の状態
 
