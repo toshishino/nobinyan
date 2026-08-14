@@ -1,0 +1,32 @@
+{
+  "name": "nobinyan",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+  "postCreateCommand": "cd uta-timer-server && npm install",
+
+  "forwardPorts": [8787],
+  "portsAttributes": {
+    "8787": {
+      "label": "のびニャン 設定画面 / WebSocket",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "editor.formatOnSave": false
+      }
+    }
+  },
+
+  "remoteEnv": {
+    "STREAMER_ID": "default"
+  }
+}

@@ -127,7 +127,7 @@ viewers (
 | フェーズ | 内容 | 状態 |
 |---|---|---|
 | 1 | Twitch実運用（匿名IRC、初コメ/投げ銭/サブスク/サブスクギフト検知） | 実装済み・実配信検証待ち |
-| 2 | YouTube連携（Live Chat APIポーリング） | 実装済み・既定オフ（`ENABLE_YOUTUBE=true`で有効化可） |
+| 2 | YouTube連携（Live Chat APIポーリング） | 実装済み・既定オフ（設定画面から有効化可） |
 | 3 | YouTube初コメ判定のセッション化 | 実装済み |
 | 4 | 常連ランキング機能（Twitch/YouTube共通） | CLI版のみ実装、Web UI化は未着手 |
 
