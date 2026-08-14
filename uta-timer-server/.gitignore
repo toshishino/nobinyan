@@ -1,0 +1,6 @@
+node_modules/
+.env
+viewers.db
+viewers.db-shm
+viewers.db-wal
+*.log

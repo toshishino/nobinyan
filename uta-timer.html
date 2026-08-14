@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>歌枠タイムカウンター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0A0F;
+    --panel:#14141C;
+    --panel-2:#1B1B26;
+    --line: rgba(245,240,232,0.08);
+    --amber:#F2A93B;
+    --magenta:#E85D8A;
+    --teal:#34C7B5;
+    --text:#F5F0E8;
+    --muted:#8B8A99;
+    --danger:#E85D5D;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(242,169,59,0.10), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    display:flex;
+    justify-content:center;
+    padding: 28px 16px 60px;
+  }
+  .app{ width:100%; max-width:640px; }
+
+  /* ---- Header ---- */
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.18em;
+    color:var(--muted);
+    text-transform:uppercase;
+    text-align:center;
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    font-size:20px;
+    letter-spacing:0.02em;
+    text-align:center;
+    margin:0 0 28px;
+    color:var(--text);
+  }
+
+  /* ---- Timer ---- */
+  .timer-wrap{
+    text-align:center;
+    margin-bottom:18px;
+    position:relative;
+  }
+  .status-dot{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin-bottom:10px;
+  }
+  .status-dot .dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--muted);
+  }
+  .status-dot.running .dot{
+    background:var(--teal);
+    box-shadow:0 0 0 0 rgba(52,199,181,0.6);
+    animation:pulse 1.6s infinite;
+  }
+  .status-dot.overtime .dot{ background:var(--danger); animation:pulse-red 1s infinite; }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(52,199,181,0.55); }
+    70%{ box-shadow:0 0 0 10px rgba(52,199,181,0); }
+    100%{ box-shadow:0 0 0 0 rgba(52,199,181,0); }
+  }
+  @keyframes pulse-red{
+    0%{ box-shadow:0 0 0 0 rgba(232,93,93,0.55); }
+    70%{ box-shadow:0 0 0 10px rgba(232,93,93,0); }
+    100%{ box-shadow:0 0 0 0 rgba(232,93,93,0); }
+  }
+  .clock{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size:clamp(64px, 18vw, 108px);
+    line-height:1;
+    letter-spacing:0.01em;
+    font-variant-numeric: tabular-nums;
+    color:var(--amber);
+    text-shadow: 0 0 40px rgba(242,169,59,0.25);
+    transition: color .3s;
+  }
+  .clock.overtime{ color:var(--danger); text-shadow:0 0 40px rgba(232,93,93,0.3); }
+  .clock-sub{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    color:var(--muted);
+    margin-top:8px;
+  }
+
+  /* ---- Extension track (signature element) ---- */
+  .track-label{
+    display:flex; justify-content:space-between;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; color:var(--muted);
+    margin: 22px 0 6px;
+    letter-spacing:0.05em;
+  }
+  .track{
+    display:flex; align-items:flex-end; gap:3px;
+    height:40px;
+    padding:0 2px;
+    border-bottom:1px solid var(--line);
+  }
+  .track-seg{
+    flex:0 0 auto;
+    width:8px;
+    border-radius:2px 2px 0 0;
+    opacity:0.9;
+  }
+  .track-seg.base{ background:var(--amber); height:100%; }
+  .track-seg.comment{ background:var(--magenta); height:65%; }
+  .track-seg.gift{ background:var(--teal); height:82%; }
+  .track-seg.manual{ background:var(--muted); height:40%; }
+  .track-empty{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--muted);
+    padding-bottom:8px;
+  }
+
+  /* ---- Controls ---- */
+  .controls{ margin-top:26px; }
+  .row{ display:flex; gap:10px; }
+  .row + .row{ margin-top:10px; }
+
+  button{
+    font-family:'Inter', sans-serif;
+    border:none;
+    cursor:pointer;
+    color:var(--text);
+    transition: transform .08s ease, background .15s ease, opacity .15s ease;
+  }
+  button:active{ transform: scale(0.97); }
+
+  .btn-primary{
+    flex:1;
+    background:var(--amber);
+    color:#1A1305;
+    font-weight:700;
+    font-size:16px;
+    padding:16px;
+    border-radius:12px;
+  }
+  .btn-primary.running{ background:var(--panel-2); color:var(--text); border:1px solid var(--line); }
+  .btn-secondary{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--muted);
+    font-size:14px;
+    padding:16px 18px;
+    border-radius:12px;
+  }
+
+  .card-btn{
+    flex:1;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 14px;
+    text-align:left;
+    position:relative;
+    overflow:hidden;
+  }
+  .card-btn::before{
+    content:'';
+    position:absolute; left:0; top:0; bottom:0; width:4px;
+  }
+  .card-btn.comment::before{ background:var(--magenta); }
+  .card-btn.gift::before{ background:var(--teal); }
+  .card-title{
+    font-family:'Oswald', sans-serif;
+    font-size:15px; font-weight:600;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .card-plus{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    padding:2px 8px;
+    border-radius:20px;
+  }
+  .card-btn.comment .card-plus{ color:var(--magenta); background:rgba(232,93,138,0.12); }
+  .card-btn.gift .card-plus{ color:var(--teal); background:rgba(52,199,181,0.12); }
+  .card-count{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; color:var(--muted); margin-top:6px;
+  }
+
+  .gift-stepper{
+    display:flex; align-items:center; gap:8px; margin-top:12px;
+  }
+  .gift-stepper button{
+    width:34px; height:34px; border-radius:9px;
+    background:var(--panel-2); border:1px solid var(--line);
+    font-size:16px; font-weight:600;
+  }
+  .gift-stepper input{
+    width:44px; text-align:center;
+    background:transparent; border:none; color:var(--text);
+    font-family:'JetBrains Mono', monospace; font-size:15px;
+  }
+  .gift-stepper .add-btn{
+    margin-left:auto;
+    background:var(--teal); color:#06231F;
+    font-weight:700; font-size:13px;
+    padding:9px 16px; border-radius:9px;
+  }
+
+  .manual-row{
+    display:flex; gap:8px; margin-top:10px;
+  }
+  .manual-row button{
+    flex:1;
+    background:var(--panel-2); border:1px solid var(--line);
+    font-family:'JetBrains Mono', monospace; font-size:13px;
+    padding:10px; border-radius:10px; color:var(--muted);
+  }
+
+  /* ---- Settings ---- */
+  .settings-toggle{
+    display:block; margin:22px auto 0;
+    background:none; color:var(--muted);
+    font-family:'JetBrains Mono', monospace; font-size:12px;
+    text-decoration:underline; text-underline-offset:3px;
+  }
+  .settings{
+    margin-top:14px; padding:16px;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    display:none;
+  }
+  .settings.open{ display:block; }
+  .settings-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+  }
+  .settings-row:last-child{ border-bottom:none; }
+  .settings-row input{
+    width:64px; text-align:right;
+    background:var(--panel-2); border:1px solid var(--line);
+    border-radius:8px; color:var(--text); padding:6px 8px;
+    font-family:'JetBrains Mono', monospace; font-size:13px;
+  }
+
+  /* ---- History ---- */
+  .history-title{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; letter-spacing:0.08em; color:var(--muted);
+    margin: 26px 0 8px;
+  }
+  .history{
+    max-height:190px; overflow-y:auto;
+    display:flex; flex-direction:column; gap:6px;
+    padding-right:2px;
+  }
+  .hist-item{
+    display:flex; align-items:center; gap:10px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 12px;
+    font-size:13px;
+  }
+  .hist-dot{ width:7px; height:7px; border-radius:50%; flex:0 0 auto; }
+  .hist-dot.base{ background:var(--amber); }
+  .hist-dot.comment{ background:var(--magenta); }
+  .hist-dot.gift{ background:var(--teal); }
+  .hist-dot.manual{ background:var(--muted); }
+  .hist-label{ flex:1; color:var(--text); }
+  .hist-delta{ font-family:'JetBrains Mono', monospace; color:var(--muted); font-size:12px; }
+  .hist-time{ font-family:'JetBrains Mono', monospace; color:var(--muted); font-size:11px; }
+  .history-empty{ color:var(--muted); font-size:12px; text-align:center; padding:14px; }
+
+  .auto-badge{
+    text-align:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--muted);
+    margin-bottom:14px;
+    padding:6px 10px;
+    border:1px solid var(--line);
+    border-radius:20px;
+    display:table;
+    margin-left:auto; margin-right:auto;
+  }
+  .auto-badge.connected{ color:var(--teal); border-color:rgba(52,199,181,0.35); }
+  .auto-badge.error{ color:var(--danger); border-color:rgba(232,93,93,0.35); }
+
+  .hint{
+    text-align:center; margin-top:20px;
+    font-size:11px; color:var(--muted); line-height:1.6;
+  }
+  kbd{
+    font-family:'JetBrains Mono', monospace;
+    background:var(--panel-2); border:1px solid var(--line);
+    border-radius:4px; padding:1px 5px; font-size:10px;
+  }
+
+  /* ---- OBS mode (?obs=1): big clean overlay, no controls ---- */
+  body.obs-mode{ background:transparent; padding:20px; }
+  body.obs-mode .app{ max-width:none; }
+  body.obs-mode .controls,
+  body.obs-mode .settings-toggle,
+  body.obs-mode .settings,
+  body.obs-mode .history-title,
+  body.obs-mode .history,
+  body.obs-mode .hint,
+  body.obs-mode h1,
+  body.obs-mode .auto-badge,
+  body.obs-mode .eyebrow{ display:none; }
+  body.obs-mode .clock{ font-size:clamp(72px, 22vw, 140px); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="eyebrow">SINGING STREAM</div>
+  <h1>歌枠タイムカウンター</h1>
+
+  <div class="auto-badge" id="autoBadge">自動検知：未接続</div>
+
+  <div class="timer-wrap">
+    <div class="status-dot" id="statusDot"><span class="dot"></span><span id="statusText">停止中</span></div>
+    <div class="clock" id="clock">30:00</div>
+    <div class="clock-sub" id="clockSub">終了予定 --:--</div>
+  </div>
+
+  <div class="track-label"><span>延長トラック</span><span id="trackTotal">合計 30:00</span></div>
+  <div class="track" id="track"></div>
+
+  <div class="controls">
+    <div class="row">
+      <button class="btn-primary" id="toggleBtn">▶ スタート</button>
+      <button class="btn-secondary" id="resetBtn">リセット</button>
+    </div>
+
+    <div class="row">
+      <button class="card-btn comment" id="commentBtn">
+        <div class="card-title">初コメ<span class="card-plus">+5:00</span></div>
+        <div class="card-count" id="commentCount">0人</div>
+      </button>
+      <button class="card-btn gift" id="giftBtnQuick">
+        <div class="card-title">ギフト<span class="card-plus">+10:00</span></div>
+        <div class="card-count" id="giftCount">0個</div>
+      </button>
+    </div>
+
+    <div class="gift-stepper">
+      <button id="giftMinus">−</button>
+      <input type="number" id="giftQty" value="1" min="1">
+      <button id="giftPlus">＋</button>
+      <button class="add-btn" id="giftBatchAdd">まとめて追加</button>
+    </div>
+
+    <div class="manual-row">
+      <button id="manualMinus">−1分（修正）</button>
+      <button id="manualPlus">+1分（修正）</button>
+    </div>
+
+    <div class="manual-row" id="resetSessionRow" style="display:none;">
+      <button id="resetSessionBtn" style="color:var(--magenta); border-color:var(--magenta);">配信開始：初コメ判定をリセット</button>
+    </div>
+  </div>
+
+  <button class="settings-toggle" id="settingsToggle">⚙ 設定を開く</button>
+  <div class="settings" id="settings">
+    <div class="settings-row"><span>基本時間（分）</span><input type="number" id="setBase" value="30" min="1"></div>
+    <div class="settings-row"><span>初コメ加算（分）</span><input type="number" id="setComment" value="5" min="1"></div>
+    <div class="settings-row"><span>ギフト加算（分/個）</span><input type="number" id="setGift" value="10" min="1"></div>
+    <div class="settings-row"><span>設定を反映してリセット</span><button class="btn-secondary" id="applySettings" style="padding:8px 14px;font-size:12px;">適用</button></div>
+  </div>
+
+  <div class="history-title">追加履歴</div>
+  <div class="history" id="history">
+    <div class="history-empty">まだ追加はありません</div>
+  </div>
+
+  <div class="hint">
+    キーボード操作: <kbd>Space</kbd> 開始/一時停止 &nbsp; <kbd>C</kbd> 初コメ+5分 &nbsp; <kbd>G</kbd> ギフト+10分<br>
+    OBSに載せる場合はこのウィンドウ／ディスプレイをキャプチャしてください（URLに <kbd>?obs=1</kbd> を付けると表示専用の大画面モードになります）<br>
+    自動検知サーバーに繋ぐ場合は <kbd>?ws=ws://localhost:8787</kbd> をURLに付けてください（併用可: <kbd>?obs=1&ws=ws://localhost:8787</kbd>）
+  </div>
+</div>
+
+<script>
+(function(){
+  const params = new URLSearchParams(location.search);
+  if(params.get('obs') === '1'){ document.body.classList.add('obs-mode'); }
+
+  let settings = { base:30, comment:5, gift:10 };
+  let remaining = settings.base * 60; // seconds
+  let running = false;
+  let intervalId = null;
+  let commentCount = 0;
+  let giftCount = 0;
+  let history = []; // {type,label,delta,time}
+  let track = [{type:'base', label:'基本30分'}];
+
+  const $ = id => document.getElementById(id);
+  const clockEl = $('clock'), clockSub = $('clockSub'), statusDot = $('statusDot'), statusText = $('statusText');
+  const toggleBtn = $('toggleBtn'), resetBtn = $('resetBtn');
+  const commentBtn = $('commentBtn'), commentCountEl = $('commentCount');
+  const giftBtnQuick = $('giftBtnQuick'), giftCountEl = $('giftCount');
+  const giftQty = $('giftQty'), giftMinus = $('giftMinus'), giftPlus = $('giftPlus'), giftBatchAdd = $('giftBatchAdd');
+  const manualMinus = $('manualMinus'), manualPlus = $('manualPlus');
+  const settingsToggle = $('settingsToggle'), settingsPanel = $('settings'), applySettings = $('applySettings');
+  const setBase = $('setBase'), setComment = $('setComment'), setGift = $('setGift');
+  const historyEl = $('history'), trackEl = $('track'), trackTotal = $('trackTotal');
+
+  function fmt(sec){
+    const neg = sec < 0;
+    sec = Math.abs(sec);
+    const m = Math.floor(sec/60), s = sec%60;
+    return (neg?'-':'') + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+
+  function render(){
+    clockEl.textContent = fmt(remaining);
+    clockEl.classList.toggle('overtime', remaining < 0);
+    statusDot.classList.toggle('running', running && remaining >= 0);
+    statusDot.classList.toggle('overtime', remaining < 0);
+    statusText.textContent = remaining < 0 ? '延長オーバー' : (running ? '進行中' : '停止中');
+
+    if(running){
+      const end = new Date(Date.now() + remaining*1000);
+      clockSub.textContent = '終了予定 ' + end.getHours().toString().padStart(2,'0') + ':' + end.getMinutes().toString().padStart(2,'0');
+    } else {
+      clockSub.textContent = '停止中';
+    }
+
+    toggleBtn.textContent = running ? '⏸ 一時停止' : '▶ スタート';
+    toggleBtn.classList.toggle('running', running);
+
+    commentCountEl.textContent = commentCount + '人';
+    giftCountEl.textContent = giftCount + '個';
+
+    const totalSec = track.reduce((sum,t)=> sum + (t.sec||0), settings.base*60);
+    trackTotal.textContent = '合計 ' + fmt(totalSec);
+
+    trackEl.innerHTML = '';
+    if(track.length === 0){
+      trackEl.innerHTML = '<div class="track-empty">延長なし</div>';
+    } else {
+      track.forEach(t=>{
+        const seg = document.createElement('div');
+        seg.className = 'track-seg ' + t.type;
+        trackEl.appendChild(seg);
+      });
+    }
+
+    if(history.length === 0){
+      historyEl.innerHTML = '<div class="history-empty">まだ追加はありません</div>';
+    } else {
+      historyEl.innerHTML = history.slice().reverse().map(h => `
+        <div class="hist-item">
+          <span class="hist-dot ${h.type}"></span>
+          <span class="hist-label">${h.label}</span>
+          <span class="hist-delta">${h.delta}</span>
+          <span class="hist-time">${h.time}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  function nowStr(){
+    const d = new Date();
+    return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+  }
+
+  function addTime(minutes, type, label){
+    const sec = minutes * 60;
+    remaining += sec;
+    track.push({type, sec});
+    history.push({type, label, delta:'+'+minutes+':00', time: nowStr()});
+    render();
+  }
+
+  function tick(){
+    remaining -= 1;
+    render();
+  }
+
+  toggleBtn.addEventListener('click', ()=>{
+    running = !running;
+    if(running){
+      intervalId = setInterval(tick, 1000);
+    } else {
+      clearInterval(intervalId);
+    }
+    render();
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    if(!confirm('タイマーをリセットしますか？（履歴もすべて消えます）')) return;
+    running = false;
+    clearInterval(intervalId);
+    remaining = settings.base * 60;
+    commentCount = 0;
+    giftCount = 0;
+    history = [];
+    track = [{type:'base'}];
+    render();
+  });
+
+  commentBtn.addEventListener('click', ()=>{
+    commentCount += 1;
+    addTime(settings.comment, 'comment', '初コメ #' + commentCount);
+  });
+
+  function doGiftAdd(qty){
+    if(qty < 1) return;
+    giftCount += qty;
+    addTime(settings.gift * qty, 'gift', 'ギフト ×' + qty);
+  }
+  giftBtnQuick.addEventListener('click', ()=> doGiftAdd(1));
+  giftBatchAdd.addEventListener('click', ()=> doGiftAdd(parseInt(giftQty.value)||1));
+  giftMinus.addEventListener('click', ()=>{ giftQty.value = Math.max(1, (parseInt(giftQty.value)||1) - 1); });
+  giftPlus.addEventListener('click', ()=>{ giftQty.value = (parseInt(giftQty.value)||1) + 1; });
+
+  manualMinus.addEventListener('click', ()=> addTime(-1, 'manual', '手動修正'));
+  manualPlus.addEventListener('click', ()=> addTime(1, 'manual', '手動修正'));
+
+  settingsToggle.addEventListener('click', ()=>{
+    settingsPanel.classList.toggle('open');
+    settingsToggle.textContent = settingsPanel.classList.contains('open') ? '⚙ 設定を閉じる' : '⚙ 設定を開く';
+  });
+
+  applySettings.addEventListener('click', ()=>{
+    if(!confirm('設定を反映してタイマーをリセットします。よろしいですか？')) return;
+    settings.base = Math.max(1, parseInt(setBase.value)||30);
+    settings.comment = Math.max(1, parseInt(setComment.value)||5);
+    settings.gift = Math.max(1, parseInt(setGift.value)||10);
+    running = false;
+    clearInterval(intervalId);
+    remaining = settings.base * 60;
+    commentCount = 0; giftCount = 0;
+    history = []; track = [{type:'base'}];
+    render();
+  });
+
+  // ---- 自動検知サーバーへの接続 (?ws=ws://localhost:8787) ----
+  const autoBadge = $('autoBadge');
+  const resetSessionRow = $('resetSessionRow');
+  const resetSessionBtn = $('resetSessionBtn');
+  const wsUrl = params.get('ws');
+  let activeSocket = null;
+
+  if(wsUrl){
+    connectAuto(wsUrl);
+    resetSessionRow.style.display = 'flex';
+  } else {
+    autoBadge.textContent = '自動検知：未使用（手動モード）';
+  }
+
+  resetSessionBtn.addEventListener('click', ()=>{
+    if(!activeSocket || activeSocket.readyState !== WebSocket.OPEN){
+      alert('自動検知サーバーに接続されていません。');
+      return;
+    }
+    if(!confirm('初コメ判定をリセットします。よろしいですか？\n(すでに発言した人も、次のコメントで「初コメ」扱いになります)')) return;
+    activeSocket.send(JSON.stringify({ action: 'reset_session' }));
+  });
+
+  function connectAuto(url){
+    let socket;
+    try{
+      socket = new WebSocket(url);
+      activeSocket = socket;
+    } catch(e){
+      autoBadge.textContent = '自動検知：接続エラー';
+      autoBadge.classList.add('error');
+      return;
+    }
+
+    socket.addEventListener('open', ()=>{
+      autoBadge.textContent = '自動検知：接続中 (' + url + ')';
+      autoBadge.classList.remove('error');
+      autoBadge.classList.add('connected');
+    });
+
+    socket.addEventListener('close', ()=>{
+      autoBadge.textContent = '自動検知：切断（5秒後に再接続）';
+      autoBadge.classList.remove('connected');
+      autoBadge.classList.add('error');
+      setTimeout(()=> connectAuto(url), 5000);
+    });
+
+    socket.addEventListener('error', ()=>{
+      autoBadge.classList.add('error');
+    });
+
+    socket.addEventListener('message', (msg)=>{
+      let ev;
+      try{ ev = JSON.parse(msg.data); } catch(e){ return; }
+      handleAutoEvent(ev);
+    });
+  }
+
+  function handleAutoEvent(ev){
+    const platform = ev.source === 'twitch' ? 'Twitch' : ev.source === 'youtube' ? 'YouTube' : ev.source;
+    const who = ev.user ? ev.user : '';
+
+    if(ev.type === 'session_reset'){
+      history.push({type:'manual', label:'初コメ判定リセット', delta:'', time: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})});
+      render();
+      return;
+    }
+
+    if(ev.type === 'first_comment'){
+      commentCount += 1;
+      addTime(settings.comment, 'comment', `[${platform}] 初コメ ${who}`);
+    } else if(ev.type === 'donation'){
+      giftCount += 1;
+      addTime(settings.gift, 'gift', `[${platform}] 投げ銭 ${who}${ev.note ? ' ('+ev.note+')' : ''}`);
+    } else if(ev.type === 'subscription'){
+      giftCount += 1;
+      addTime(settings.gift, 'gift', `[${platform}] サブスク ${who}`);
+    } else if(ev.type === 'sub_gift'){
+      const qty = Math.max(1, parseInt(ev.count) || 1);
+      giftCount += qty;
+      addTime(settings.gift * qty, 'gift', `[${platform}] サブギフト ${who} ×${qty}`);
+    }
+  }
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.target.tagName === 'INPUT') return;
+    if(e.code === 'Space'){ e.preventDefault(); toggleBtn.click(); }
+    if(e.key.toLowerCase() === 'c'){ commentBtn.click(); }
+    if(e.key.toLowerCase() === 'g'){ giftBtnQuick.click(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

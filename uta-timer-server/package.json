@@ -1,0 +1,17 @@
+{
+  "name": "uta-timer-server",
+  "version": "0.1.0",
+  "description": "Twitch/YouTubeの初コメ・ギフトを検知してタイマー画面にWebSocketで通知する中継サーバー",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "ranking": "node ranking.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "tmi.js": "^1.8.5",
+    "ws": "^8.18.0"
+  }
+}

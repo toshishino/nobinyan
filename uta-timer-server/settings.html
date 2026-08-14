@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>歌枠タイムカウンター 設定</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0A0F; --panel:#14141C; --panel-2:#1B1B26; --line:rgba(245,240,232,0.08);
+    --amber:#F2A93B; --magenta:#E85D8A; --teal:#34C7B5; --text:#F5F0E8; --muted:#8B8A99;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh;
+    background: radial-gradient(1200px 600px at 50% -10%, rgba(242,169,59,0.10), transparent 60%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif;
+    display:flex; justify-content:center; padding:32px 16px 60px;
+  }
+  .app{ width:100%; max-width:560px; }
+  .eyebrow{ font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.18em; color:var(--muted); text-transform:uppercase; text-align:center; margin-bottom:6px; }
+  h1{ font-family:'Oswald', sans-serif; font-weight:600; font-size:20px; text-align:center; margin:0 0 24px; }
+
+  .status-bar{
+    display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap; justify-content:center;
+  }
+  .status-chip{
+    font-family:'JetBrains Mono', monospace; font-size:12px;
+    padding:7px 12px; border-radius:20px; border:1px solid var(--line); color:var(--muted);
+    display:flex; align-items:center; gap:6px;
+  }
+  .status-chip .dot{ width:7px; height:7px; border-radius:50%; background:var(--muted); }
+  .status-chip.on{ color:var(--teal); border-color:rgba(52,199,181,0.35); }
+  .status-chip.on .dot{ background:var(--teal); }
+
+  section{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:18px 18px 20px; margin-bottom:16px;
+  }
+  section h2{
+    font-family:'Oswald', sans-serif; font-size:15px; font-weight:600;
+    margin:0 0 4px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .section-sub{ font-size:12px; color:var(--muted); margin:0 0 14px; line-height:1.5; }
+
+  .field{ margin-bottom:14px; }
+  .field:last-child{ margin-bottom:0; }
+  label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+  input[type="text"], input[type="password"]{
+    width:100%; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:9px; padding:10px 12px; color:var(--text);
+    font-family:'JetBrains Mono', monospace; font-size:13px;
+  }
+  input:focus{ outline:none; border-color:var(--amber); }
+
+  .toggle-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 0; border-bottom:1px solid var(--line);
+  }
+  .toggle-row:last-child{ border-bottom:none; }
+  .toggle-label{ font-size:13px; }
+  .toggle-label small{ display:block; color:var(--muted); font-size:11px; margin-top:2px; }
+
+  .switch{ position:relative; width:42px; height:24px; flex:0 0 auto; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{
+    position:absolute; inset:0; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:24px; cursor:pointer; transition:.15s;
+  }
+  .slider::before{
+    content:''; position:absolute; width:16px; height:16px; left:3px; top:3px;
+    background:var(--muted); border-radius:50%; transition:.15s;
+  }
+  input:checked + .slider{ background:rgba(52,199,181,0.18); border-color:var(--teal); }
+  input:checked + .slider::before{ transform:translateX(18px); background:var(--teal); }
+
+  .save-btn{
+    width:100%; margin-top:6px;
+    background:var(--amber); color:#1A1305; font-weight:700; font-size:14px;
+    border:none; border-radius:10px; padding:13px; cursor:pointer;
+    font-family:'Inter', sans-serif;
+  }
+  .save-btn:active{ transform:scale(0.98); }
+  .save-btn.secondary{ background:var(--panel-2); color:var(--text); border:1px solid var(--line); }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--panel-2); border:1px solid var(--teal); color:var(--teal);
+    padding:10px 18px; border-radius:10px; font-size:13px;
+    font-family:'JetBrains Mono', monospace;
+    opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .toast.show{ opacity:1; }
+
+  .hint{ text-align:center; font-size:11px; color:var(--muted); margin-top:20px; line-height:1.6; }
+  kbd{ font-family:'JetBrains Mono', monospace; background:var(--panel-2); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:10px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="eyebrow">SINGING STREAM</div>
+  <h1>歌枠タイムカウンター 設定</h1>
+
+  <div class="status-bar" id="statusBar"></div>
+
+  <section>
+    <h2>Twitch</h2>
+    <p class="section-sub">匿名接続で読み取るだけなので、Twitchアカウントの認証は不要です。</p>
+    <div class="toggle-row">
+      <div class="toggle-label">Twitch連携を有効にする</div>
+      <label class="switch"><input type="checkbox" id="enableTwitch"><span class="slider"></span></label>
+    </div>
+    <div class="field">
+      <label for="twitchChannel">チャンネル名（ログイン名）</label>
+      <input type="text" id="twitchChannel" placeholder="例: your_channel_name">
+    </div>
+  </section>
+
+  <section>
+    <h2>ギフト加算の対象</h2>
+    <p class="section-sub">オフにしても記録（常連ランキング用）は続きますが、タイマーには反映されません。</p>
+    <div class="toggle-row">
+      <div class="toggle-label">投げ銭（Bits）</div>
+      <label class="switch"><input type="checkbox" id="countCheer"><span class="slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-label">サブスク<small>新規登録・継続</small></div>
+      <label class="switch"><input type="checkbox" id="countSub"><span class="slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-label">サブスクギフト<small>贈られたサブスク</small></div>
+      <label class="switch"><input type="checkbox" id="countSubGift"><span class="slider"></span></label>
+    </div>
+  </section>
+
+  <section>
+    <h2>YouTube <span style="color:var(--muted); font-size:11px; font-weight:400;">(準備中)</span></h2>
+    <p class="section-sub">先にAPIキーを取得しておく必要があります。配信ごとに動画IDだけ更新すればOKです。</p>
+    <div class="toggle-row">
+      <div class="toggle-label">YouTube連携を有効にする</div>
+      <label class="switch"><input type="checkbox" id="enableYoutube"><span class="slider"></span></label>
+    </div>
+    <div class="field">
+      <label for="youtubeApiKey">APIキー</label>
+      <input type="password" id="youtubeApiKey" placeholder="Google Cloud ConsoleのAPIキー">
+    </div>
+    <div class="field">
+      <label for="youtubeVideoId">配信中の動画ID</label>
+      <input type="text" id="youtubeVideoId" placeholder="watch?v=の後ろの部分">
+    </div>
+  </section>
+
+  <section>
+    <h2>配信リセット</h2>
+    <p class="section-sub">「初コメ」判定は配信ごとにリセットする必要があります。配信を開始したら押してください。サーバーを配信のたびに再起動している場合は不要です（自動でリセットされます）。</p>
+    <div id="lastReset" style="font-size:12px; color:var(--muted); margin-bottom:12px;"></div>
+    <button class="save-btn secondary" id="resetBtn" style="border-color:var(--magenta); color:var(--magenta);">初コメ判定をリセット（配信開始時）</button>
+  </section>
+
+  <button class="save-btn" id="saveBtn">設定を保存して反映</button>
+  <button class="save-btn secondary" id="reloadBtn" style="margin-top:8px;">状態を更新</button>
+
+  <div class="hint">
+    保存すると即座にTwitch接続・YouTubeポーリングに反映されます（サーバー再起動は不要）。<br>
+    タイマー画面は <kbd>uta-timer.html?ws=ws://localhost:8787</kbd> で開いてください。
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fields = ['enableTwitch','twitchChannel','countCheer','countSub','countSubGift','enableYoutube','youtubeVideoId'];
+
+function showToast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 2200);
+}
+
+function renderStatus(status){
+  const bar = $('statusBar');
+  bar.innerHTML = '';
+  const twitchChip = document.createElement('div');
+  twitchChip.className = 'status-chip' + (status.twitchConnected ? ' on' : '');
+  twitchChip.innerHTML = `<span class="dot"></span>Twitch: ${status.twitchConnected ? '#' + status.twitchChannel + ' 接続中' : '未接続'}`;
+  bar.appendChild(twitchChip);
+
+  const ytChip = document.createElement('div');
+  ytChip.className = 'status-chip' + (status.youtubeRunning ? ' on' : '');
+  ytChip.innerHTML = `<span class="dot"></span>YouTube: ${status.youtubeRunning ? '監視中' : '停止中'}`;
+  bar.appendChild(ytChip);
+
+  const lastReset = $('lastReset');
+  if(status.lastResetAt){
+    const d = new Date(status.lastResetAt);
+    lastReset.textContent = `前回のリセット: ${d.toLocaleString('ja-JP')}`;
+  } else {
+    lastReset.textContent = 'まだリセットされていません（サーバー起動時からの状態です）';
+  }
+}
+
+async function loadConfig(){
+  const res = await fetch('/api/config');
+  const data = await res.json();
+  $('enableTwitch').checked = !!data.config.enableTwitch;
+  $('twitchChannel').value = data.config.twitchChannel || '';
+  $('countCheer').checked = !!data.config.countCheer;
+  $('countSub').checked = !!data.config.countSub;
+  $('countSubGift').checked = !!data.config.countSubGift;
+  $('enableYoutube').checked = !!data.config.enableYoutube;
+  $('youtubeVideoId').value = data.config.youtubeVideoId || '';
+  // APIキーはマスクされて返るので、既に設定済みならプレースホルダーに表示するだけで空のまま扱う
+  $('youtubeApiKey').placeholder = data.config.youtubeApiKey ? `設定済み (${data.config.youtubeApiKey})` : 'Google Cloud ConsoleのAPIキー';
+  renderStatus(data.status);
+}
+
+async function saveConfig(){
+  const payload = {
+    enableTwitch: $('enableTwitch').checked,
+    twitchChannel: $('twitchChannel').value.trim(),
+    countCheer: $('countCheer').checked,
+    countSub: $('countSub').checked,
+    countSubGift: $('countSubGift').checked,
+    enableYoutube: $('enableYoutube').checked,
+    youtubeVideoId: $('youtubeVideoId').value.trim(),
+  };
+  // APIキーは入力欄が空なら送らない(既存の値を保持する)
+  const apiKeyVal = $('youtubeApiKey').value.trim();
+  if(apiKeyVal) payload.youtubeApiKey = apiKeyVal;
+
+  const res = await fetch('/api/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if(data.ok){
+    showToast('保存しました');
+    $('youtubeApiKey').value = '';
+    renderStatus(data.status);
+    $('youtubeApiKey').placeholder = data.config.youtubeApiKey ? `設定済み (${data.config.youtubeApiKey})` : 'Google Cloud ConsoleのAPIキー';
+  } else {
+    showToast('保存に失敗しました');
+  }
+}
+
+$('saveBtn').addEventListener('click', saveConfig);
+$('reloadBtn').addEventListener('click', loadConfig);
+$('resetBtn').addEventListener('click', async ()=>{
+  if(!confirm('初コメ判定をリセットします。よろしいですか？\n(すでに発言した人も、次のコメントで「初コメ」扱いになります)')) return;
+  const res = await fetch('/api/reset-session', { method: 'POST' });
+  const data = await res.json();
+  if(data.ok){
+    showToast('初コメ判定をリセットしました');
+    renderStatus(data.status);
+  } else {
+    showToast('リセットに失敗しました');
+  }
+});
+
+loadConfig();
+setInterval(async ()=>{
+  const res = await fetch('/api/status');
+  renderStatus(await res.json());
+}, 5000);
+</script>
+</body>
+</html>
