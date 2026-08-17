@@ -142,5 +142,6 @@ viewers (
 - Twitch匿名接続でサブギフト等のUSERNOTICE系イベントが受信できない場合、Botアカウント＋OAuthトークンでの接続に切り替える必要がある（要検証）
 - DB層は標準の`node:sqlite`を使用（Node.js 22.5以上が必要）。将来のpkg配布を見据え、ネイティブアドオンだった`better-sqlite3`から移行済み
 - `@yao-pkg/pkg`で.exe化した場合、DBファイルの既定保存先は実行ファイルと同じフォルダになる（`__dirname`は読み取り専用の仮想スナップショットを指すため書き込み先にできない。`db.js`の`process.pkg`判定を参照）
+- ESM(`"type": "module"`)のままpkgに直接渡すと`ERR_MODULE_NOT_FOUND`になるため、`npm run build:win`は事前に`esbuild`で`server.js`を単一のCommonJSファイル(`dist-src/bundle.cjs`)にバンドルしてからpkgに渡す。`import.meta.url`はCJS化すると空になるため、`server.js`/`db.js`の`__dirname`計算はバンドル後のCJSネイティブ`__filename`を優先するようにしてある
 - 視聴者のID・表示名をローカルDBに保存する仕組みのため、他配信者へ配布する際はその旨を明記する想定
 - 常時稼働にはCodespacesやOracle Cloud等でサーバーを起動しっぱなしにする必要がある

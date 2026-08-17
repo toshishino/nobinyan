@@ -5,3 +5,4 @@ viewers.db-shm
 viewers.db-wal
 *.log
 dist/
+dist-src/

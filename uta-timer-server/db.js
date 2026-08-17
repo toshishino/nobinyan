@@ -12,7 +12,11 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// esbuildでCJSにバンドルするとimport.meta.urlが使えなくなる(空になる)ため、
+// バンドル後に実体を持つCJSの__filenameがあればそちらを優先する。
+const __dirname = typeof __filename !== 'undefined'
+  ? path.dirname(__filename)
+  : path.dirname(fileURLToPath(import.meta.url));
 // pkgで.exe化した場合、__dirnameは読み取り専用の仮想スナップショット内を指すため、
 // DBの書き込み先としては使えない。その場合は実行ファイル自身のあるフォルダを使う。
 const baseDir = process.pkg ? path.dirname(process.execPath) : __dirname;

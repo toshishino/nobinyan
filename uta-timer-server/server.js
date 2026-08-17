@@ -31,7 +31,11 @@ import {
   setSetting,
 } from './db.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// esbuildでCJSにバンドルするとimport.meta.urlが使えなくなる(空になる)ため、
+// バンドル後に実体を持つCJSの__filenameがあればそちらを優先する。
+const __dirname = typeof __filename !== 'undefined'
+  ? path.dirname(__filename)
+  : path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // 配布を見据えて配信者ごとにIDを分ける(マルチテナント前提)。
