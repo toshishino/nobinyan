@@ -9,7 +9,7 @@
     "start": "node server.js",
     "ranking": "node ranking.js",
     "build:bundle": "rm -rf dist-src && esbuild server.js --bundle --platform=node --target=node22 --format=cjs --outfile=dist-src/bundle.cjs && cp -r public dist-src/public",
-    "build:win": "npm run build:bundle && pkg . --targets node22-win-x64 --output dist/uta-timer-server.exe"
+    "build:win": "npm run build:bundle && pkg . --targets node22-win-x64 --output dist/uta-timer-server.exe --public --public-packages \"*\""
   },
   "dependencies": {
     "dotenv": "^16.4.5",
