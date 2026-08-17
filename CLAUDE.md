@@ -20,11 +20,12 @@
 ## 構成
 
 ```
-uta-timer.html          … タイマー画面(ブラウザ/OBS用)
 uta-timer-server/        … 中継サーバー(Node.js, ESM)
-  ├─ server.js           … サーバー本体(Twitch/YouTube監視、HTTP/WebSocket)
-  ├─ db.js                … SQLite(better-sqlite3)。視聴者DBと設定の永続化
-  ├─ settings.html         … Web設定画面
+  ├─ server.js           … サーバー本体(Twitch/YouTube監視、HTTP/WebSocket、public/の静的配信)
+  ├─ db.js                … SQLite(node:sqlite)。視聴者DBと設定の永続化
+  ├─ public/
+  │   ├─ uta-timer.html    … タイマー画面(ブラウザ/OBS用。http://localhost:8787/uta-timer.htmlで配信)
+  │   └─ settings.html     … Web設定画面(http://localhost:8787/で配信)
   └─ ranking.js            … 常連ランキングCLI
 docs/
   └─ SPEC.md
@@ -41,11 +42,11 @@ docs/
 ## 開発上の注意点
 
 - **視聴者のID・表示名をDBに保存する仕組み**なので、他配信者への配布時はプライバシーへの配慮を忘れないこと
-- `better-sqlite3`はネイティブモジュール。環境を変える際は`npm install`のやり直しが必要な場合がある
+- DB層は標準の`node:sqlite`(Node.js 22.5+)を使用。ネイティブアドオン不要のため、pkgでの.exe化を見据えて`better-sqlite3`から移行済み
 - YouTube再起動時の二重カウント防止のため、`pageToken`はDBに永続化してある。この仕組みを壊さないこと
 - 初コメ判定用のセッション(`seenThisStream`)はメモリ上のみ。DBの`viewers`テーブルは常連ランキング用の生涯累計データであり、初コメ判定には使わない
 
 ## コーディングスタイル
 
 - コメント・ログメッセージは日本語
-- Node.js標準機能を優先し、依存パッケージは最小限に留める（現状: `dotenv`, `tmi.js`, `ws`, `better-sqlite3`のみ）
+- Node.js標準機能を優先し、依存パッケージは最小限に留める（現状: `dotenv`, `tmi.js`, `ws`のみ）

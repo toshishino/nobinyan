@@ -4,14 +4,24 @@
   "description": "Twitch/YouTubeの初コメ・ギフトを検知してタイマー画面にWebSocketで通知する中継サーバー",
   "type": "module",
   "main": "server.js",
+  "bin": "server.js",
   "scripts": {
     "start": "node server.js",
-    "ranking": "node ranking.js"
+    "ranking": "node ranking.js",
+    "build:win": "pkg . --targets node22-win-x64 --output dist/uta-timer-server.exe"
   },
   "dependencies": {
-    "better-sqlite3": "^11.3.0",
     "dotenv": "^16.4.5",
     "tmi.js": "^1.8.5",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.22.0"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*"
+    ],
+    "fallbackToSource": true
   }
 }

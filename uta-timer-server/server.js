@@ -12,7 +12,7 @@
 //   2. cp .env.example .env  (WS_PORT等、めったに変えない項目だけ)
 //   3. npm start
 //   4. ブラウザで http://localhost:8787/ を開いてTwitchチャンネル名などを設定
-//   5. タイマー画面(uta-timer.html)を ?ws=ws://localhost:8787 付きで開く
+//   5. タイマー画面 http://localhost:8787/uta-timer.html?ws=ws://localhost:8787 を開く
 
 import 'dotenv/config';
 import http from 'node:http';
@@ -32,6 +32,7 @@ import {
 } from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // 配布を見据えて配信者ごとにIDを分ける(マルチテナント前提)。
 // 自分一人で使ってる間は既定値のままでOK。
@@ -346,6 +347,30 @@ const server = http.createServer((req, res) => {
   });
 });
 
+// public/ 配下の静的ファイル配信(タイマー画面・設定画面)。
+// pkgでのバンドルを見据え、パストラバーサルを防ぎつつPUBLIC_DIR配下のみ配信する。
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+};
+
+function serveStaticFile(requestPath, res) {
+  const relativePath = decodeURIComponent(requestPath).replace(/^\/+/, '');
+  const filePath = path.join(PUBLIC_DIR, relativePath);
+  if (filePath !== PUBLIC_DIR && !filePath.startsWith(PUBLIC_DIR + path.sep)) return false;
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return false;
+
+  const contentType = MIME_TYPES[path.extname(filePath)] || 'application/octet-stream';
+  res.writeHead(200, { 'Content-Type': contentType });
+  res.end(fs.readFileSync(filePath));
+  return true;
+}
+
 async function readJsonBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -362,9 +387,7 @@ async function handleHttp(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/settings')) {
-    const html = fs.readFileSync(path.join(__dirname, 'settings.html'), 'utf8');
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(html);
+    serveStaticFile('/settings.html', res);
     return;
   }
 
@@ -392,6 +415,10 @@ async function handleHttp(req, res) {
     resetSession('設定画面から');
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true, status: statusSnapshot() }));
+    return;
+  }
+
+  if (req.method === 'GET' && serveStaticFile(url.pathname, res)) {
     return;
   }
 

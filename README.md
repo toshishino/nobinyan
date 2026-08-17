@@ -5,11 +5,12 @@
 ## 構成
 
 ```
-uta-timer.html          … タイマー画面(ブラウザで開く。OBSでキャプチャして配信に載せる)
 uta-timer-server/       … 中継サーバー(Twitch/YouTube監視、Web設定画面、視聴者DB)
   ├─ server.js          … サーバー本体
   ├─ db.js              … SQLite(視聴者DB・設定の永続化)
-  ├─ settings.html      … Web設定画面
+  ├─ public/
+  │   ├─ uta-timer.html … タイマー画面(サーバーが配信。OBSでキャプチャして配信に載せる)
+  │   └─ settings.html  … Web設定画面
   ├─ ranking.js          … 常連ランキング表示CLI
   └─ README.md          … サーバーのセットアップ・使い方詳細
 docs/                   … 仕様書
@@ -29,7 +30,7 @@ docs/                   … 仕様書
    ```
 3. Codespacesの「PORTS」タブで8787番のVisibilityを **Public** に変更し、転送用URLをコピー
 4. コピーしたURLをブラウザで開く → **設定画面**。Twitchチャンネル名などを入力して保存
-5. `uta-timer.html` を `?ws=wss://<転送用URL>` を付けて開く → **タイマー画面**（OBSでキャプチャ）
+5. `<転送用URL>/uta-timer.html?ws=wss://<転送用URL>` を開く → **タイマー画面**（OBSでキャプチャ）
 
 詳しい設定項目・トラブルシューティングは [`uta-timer-server/README.md`](uta-timer-server/README.md) を参照してください。
 

@@ -5,6 +5,8 @@ Twitch / YouTube の「初コメ」「投げ銭」「サブギフト」を検知
 
 ## セットアップ
 
+Node.js 22.5以上が必要です（DB層に標準の`node:sqlite`を使用しているため）。
+
 ```bash
 npm install
 cp .env.example .env
@@ -53,16 +55,16 @@ Twitchチャンネル名やギフト種別のon/off、YouTube連携などはこ�
 
 ## タイマー画面との接続
 
-`uta-timer.html` をブラウザで開くときにURLパラメータを付けます。
+サーバー起動後、`http://localhost:8787/uta-timer.html` をブラウザで開くときにURLパラメータを付けます。
 
 ```
-uta-timer.html?ws=ws://localhost:8787
+http://localhost:8787/uta-timer.html?ws=ws://localhost:8787
 ```
 
 OBS表示用の大画面モードと併用する場合：
 
 ```
-uta-timer.html?obs=1&ws=ws://localhost:8787
+http://localhost:8787/uta-timer.html?obs=1&ws=ws://localhost:8787
 ```
 
 サーバーが検知すると、画面上部のバッジが「自動検知：接続中」になり、
@@ -94,4 +96,4 @@ node ranking.js all gifts 20    # 全プラットフォーム、ギフト数ト�
 ## 既知の制約
 - YouTubeは配信ごとに `YOUTUBE_VIDEO_ID` の手動更新が必要です（配信中に自動取得したい場合は `liveBroadcasts.list` + OAuth への拡張が必要）
 - 常時稼働させるには、GitHub CodespacesやOracle Cloudなどでサーバーを起動しっぱなしにしておく必要があります
-- `better-sqlite3` はネイティブモジュールなので、環境（OS/Nodeバージョン）を変えると `npm install` の再実行が必要な場合があります
+- DB層は標準の`node:sqlite`を使用（Node.js 22.5未満では起動できません）。起動時に出る`ExperimentalWarning: SQLite is an experimental feature`は実害がないので無視して構いません

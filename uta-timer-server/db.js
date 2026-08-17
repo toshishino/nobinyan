@@ -8,15 +8,18 @@
 //
 // 将来、他配信者に配布することを見据えて streamer_id を必ず持たせる(マルチテナント前提)。
 
-import Database from 'better-sqlite3';
+import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'viewers.db');
+// pkgで.exe化した場合、__dirnameは読み取り専用の仮想スナップショット内を指すため、
+// DBの書き込み先としては使えない。その場合は実行ファイル自身のあるフォルダを使う。
+const baseDir = process.pkg ? path.dirname(process.execPath) : __dirname;
+const DB_PATH = process.env.DB_PATH || path.join(baseDir, 'viewers.db');
 
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
+const db = new DatabaseSync(DB_PATH);
+db.exec('PRAGMA journal_mode = WAL');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS viewers (

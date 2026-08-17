@@ -4,3 +4,4 @@ viewers.db
 viewers.db-shm
 viewers.db-wal
 *.log
+dist/
