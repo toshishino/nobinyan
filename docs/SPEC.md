@@ -143,5 +143,6 @@ viewers (
 - DB層は標準の`node:sqlite`を使用（Node.js 22.5以上が必要）。将来のpkg配布を見据え、ネイティブアドオンだった`better-sqlite3`から移行済み
 - `@yao-pkg/pkg`で.exe化した場合、DBファイルの既定保存先は実行ファイルと同じフォルダになる（`__dirname`は読み取り専用の仮想スナップショットを指すため書き込み先にできない。`db.js`の`process.pkg`判定を参照）
 - ESM(`"type": "module"`)のままpkgに直接渡すと`ERR_MODULE_NOT_FOUND`になるため、`npm run build:win`は事前に`esbuild`で`server.js`を単一のCommonJSファイル(`dist-src/bundle.cjs`)にバンドルしてからpkgに渡す。`import.meta.url`はCJS化すると空になるため、`server.js`/`db.js`の`__dirname`計算はバンドル後のCJSネイティブ`__filename`を優先するようにしてある
+- `.env`の読み込みは`env.js`が担当し、DB_PATHと同じパターンで実行ファイル(pkgの場合はexe自身)のあるフォルダを基準に探す。`process.cwd()`基準にすると、.exeをダブルクリック起動した際などにcwdがexeのフォルダと一致するとは限らず読み込めない場合があるため。`env.js`はdb.js等がprocess.envを参照するより先に読み込まれる必要があるため、server.jsの一番最初でside-effect importしている点に注意(import文の並び順を変えない)
 - 視聴者のID・表示名をローカルDBに保存する仕組みのため、他配信者へ配布する際はその旨を明記する想定
 - 常時稼働にはCodespacesやOracle Cloud等でサーバーを起動しっぱなしにする必要がある

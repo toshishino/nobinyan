@@ -14,7 +14,7 @@
 //   4. ブラウザで http://localhost:8787/ を開いてTwitchチャンネル名などを設定
 //   5. タイマー画面 http://localhost:8787/uta-timer.html?ws=ws://localhost:8787 を開く
 
-import 'dotenv/config';
+import './env.js';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
